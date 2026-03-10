@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>건설안전기사 합격 플래너</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* ── 핵심 컬러 (v23 정답박스 기준) ── */
+  --ans-bg:     #f1f8f2;   /* 정답 박스 배경 (연초록) */
+  --ans-border: #a5d6a7;   /* 정답 박스 테두리 */
+  --ans-dark:   #e8f5e9;   /* 정답 박스 진한 버전 */
+
+  --amber-bg:     #fff8e1;
+  --amber-border: #ffcc80;
+  --amber-dark:   #fff3e0;
+
+  --blue-bg:     #e8eaf6;
+  --blue-border: #9fa8da;
+  --blue-dark:   #f0f4ff;
+
+  --teal-bg:     #e0f2f1;
+  --teal-border: #80cbc4;
+
+  /* ── 그레이 시스템 ── */
+  --gray-header: #f5f5f5;   /* 카드 헤더 배경 (밝은 그레이) */
+  --gray-row:    #f5f5f5;   /* 줄무늬 배경 */
+  --gray-border: #e0e0e0;
+  --gray-text:   #5e5e5e;
+  --gray-light:  #9e9e9e;
+  --gray-mid:    #757575;
+
+  /* ── 기본 ── */
+  --white: #ffffff;
+  --black: #3a3a3a;
+  --line:  #e0e0e0;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--white);   /* ← 전체 배경 순백 */
+  color: var(--black);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 헤더: v23 정답박스 그대로 ── */
+.site-header {
+  background: var(--ans-bg);
+  border-bottom: 2px solid var(--ans-border);
+  color: var(--black);
+  padding: 28px 24px 22px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.header-inner { max-width: 860px; margin: 0 auto; }
+.header-title { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; color: #2e7d32; }
+.header-sub   { font-size: 14px; color: var(--gray-mid); margin-bottom: 18px; font-weight: 500; }
+.dday-row  { display: flex; gap: 12px; flex-wrap: wrap; }
+.dday-box  {
+  border: 1.5px solid var(--ans-border);
+  border-radius: 8px;
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 130px;
+  background: var(--white);
+}
+.dday-box.highlight { background: var(--ans-dark); border-color: var(--ans-border); }
+.dday-label { font-size: 12px; color: var(--gray-mid); margin-bottom: 2px; font-weight: 600; }
+.dday-val   { font-size: 28px; font-weight: 900; letter-spacing: -1px; color: #2e7d32; }
+.dday-date  { font-size: 12px; color: var(--gray-light); margin-top: 2px; }
+
+/* ── 탭 ── */
+.tab-bar {
+  background: var(--white);
+  border-bottom: 2px solid var(--gray-border);
+  position: sticky;
+  top: 120px;
+  z-index: 190;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-inner { display: flex; max-width: 860px; margin: 0 auto; }
+.tab-btn {
+  flex: 1; min-width: 90px; padding: 13px 10px;
+  background: none; border: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 14px; font-weight: 700;
+  color: var(--gray-light); cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px; white-space: nowrap;
+  transition: all .15s;
+}
+.tab-btn:hover { color: #2e7d32; }
+.tab-btn.active { color: #2e7d32; border-bottom-color: var(--ans-border); }
+
+/* ── 콘텐츠 ── */
+.content-area { display: none; padding: 24px 16px; max-width: 860px; margin: 0 auto; }
+.content-area.active { display: block; }
+
+/* ── 카드 공통 ── */
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--gray-border);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.card-head {
+  padding: 15px 20px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; user-select: none;
+  border-bottom: 1.5px solid transparent;
+  transition: border-color .15s;
+  background: var(--gray-header);   /* 밝은 그레이 헤더 */
+}
+.card-head.open { border-bottom-color: var(--gray-border); }
+.card-head-icon  { font-size: 20px; }
+.card-head-title { font-size: 17px; font-weight: 900; flex: 1; color: var(--black); letter-spacing: -0.3px; }
+.card-head-arrow { font-size: 13px; color: var(--gray-light); transition: transform .2s; }
+.card-head.open .card-head-arrow { transform: rotate(180deg); }
+.card-body { padding: 20px; display: none; }
+.card-body.open { display: block; }
+
+/* ── 시험 D-day 쌍 ── */
+.exam-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.exam-tile { border: 1.5px solid var(--gray-border); border-radius: 12px; padding: 20px; text-align: center; background: var(--white); }
+.exam-tile.dark { background: var(--ans-bg); border-color: var(--ans-border); }
+.exam-tile .et-label { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--gray-mid); }
+.exam-tile .et-date  { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.exam-tile .et-dday  { font-size: 44px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin-bottom: 4px; }
+.exam-tile.dark .et-dday { color: #2e7d32; }
+.exam-tile .et-sub   { font-size: 12px; color: var(--gray-light); }
+
+/* ── 로드맵 단계 ── */
+.phase-list { display: flex; flex-direction: column; gap: 10px; }
+.phase-item {
+  display: flex; gap: 14px; padding: 16px;
+  border: 1.5px solid var(--gray-border);
+  border-radius: 10px;
+  background: var(--gray-header);
+}
+.phase-item:nth-child(1) { background: var(--blue-dark);  border-color: var(--blue-border); }
+.phase-item:nth-child(2) { background: var(--ans-bg);     border-color: var(--ans-border); }
+.phase-item:nth-child(3) { background: var(--amber-bg);   border-color: var(--amber-border); }
+.phase-item:nth-child(4) { background: var(--teal-bg);    border-color: var(--teal-border); }
+.phase-item:nth-child(5) { background: #fff0f0;           border-color: #ef9a9a; }
+.phase-num {
+  width: 36px; height: 36px;
+  background: var(--gray-mid); color: var(--white);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900;
+  flex-shrink: 0; margin-top: 2px;
+}
+.phase-content {}
+.phase-period { font-size: 13px; font-weight: 700; color: var(--gray-mid); margin-bottom: 4px; }
+.phase-title  { font-size: 18px; font-weight: 900; margin-bottom: 6px; color: var(--black); }
+.phase-desc   { font-size: 15px; color: var(--gray-text); line-height: 2.1; font-weight: 500; }
+
+/* ── 진행률 ── */
+.progress-item { margin-bottom: 16px; }
+.progress-top  { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; margin-bottom: 6px; }
+.progress-pct  { color: var(--gray-mid); }
+.progress-track { height: 12px; background: var(--gray-row); border-radius: 6px; overflow: hidden; border: 1px solid var(--gray-border); }
+.progress-fill  { height: 100%; background: linear-gradient(90deg, #66bb6a, #43a047); border-radius: 6px; transition: width .6s ease; }
+
+/* ── 주간 그리드 ── */
+.week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.week-tile { border: 1.5px solid var(--gray-border); border-radius: 10px; overflow: hidden; background: var(--white); }
+.wt-head {
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1.5px solid;
+}
+/* 주차별 헤더: v23 정답박스 계열 */
+.wt-head.wc1 { background: var(--blue-dark);  border-color: var(--blue-border);   color: #283593; }
+.wt-head.wc2 { background: var(--ans-bg);     border-color: var(--ans-border);    color: #2e7d32; }
+.wt-head.wc3 { background: var(--amber-bg);   border-color: var(--amber-border);  color: #e65100; }
+.wt-head.wc4 { background: var(--teal-bg);    border-color: var(--teal-border);   color: #00695c; }
+.wt-head.wc5 { background: var(--amber-dark); border-color: var(--amber-border);  color: #bf360c; }
+.wt-head.wc6 { background: var(--ans-dark);   border-color: var(--ans-border);    color: #1b5e20; }
+.wt-head.wc7 { background: var(--ans-bg);     border-color: var(--ans-border);    color: #2e7d32; }
+.wt-head-title { font-size: 15px; font-weight: 800; }
+.wt-badge { font-size: 11px; font-weight: 700; background: rgba(255,255,255,.6); border-radius: 4px; padding: 2px 8px; border: 1px solid rgba(0,0,0,.1); }
+.wt-body { padding: 14px 16px; background: var(--white); }
+.wt-row { font-size: 15px; color: var(--gray-text); line-height: 2.1; padding: 4px 0; border-bottom: 1px solid var(--gray-row); font-weight: 500; }
+.wt-row:last-child { border-bottom: none; }
+.wt-row b { color: var(--black); font-weight: 800; }
+.tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin: 2px 2px; }
+.tag-dark  { background: var(--gray-mid); color: var(--white); }
+.tag-light { background: var(--gray-row); color: var(--gray-text); border: 1px solid var(--gray-border); }
+
+/* ── 시간표 ── */
+.timetable { width: 100%; border-collapse: collapse; font-size: 15px; }
+.timetable th { background: var(--gray-header); color: var(--black); padding: 12px 14px; text-align: left; font-weight: 800; font-size: 14px; border-bottom: 2px solid var(--gray-border); }
+.timetable td { padding: 12px 14px; border-bottom: 1px solid var(--gray-row); vertical-align: top; line-height: 1.9; font-weight: 500; color: var(--gray-text); }
+.timetable tr:last-child td { border-bottom: none; }
+.timetable tr:nth-child(odd) td { background: var(--gray-header); }
+.timetable td b { color: var(--black); font-weight: 800; }
+.time-chip {
+  display: inline-block;
+  background: var(--ans-bg); color: #2e7d32;
+  border: 1px solid var(--ans-border);
+  font-size: 12px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px;
+  white-space: nowrap; margin-bottom: 4px;
+}
+
+/* ── 체크리스트 ── */
+.check-list { list-style: none; }
+.check-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 11px 8px; border-bottom: 1px solid var(--gray-row);
+  cursor: pointer; font-size: 15px; font-weight: 600;
+  color: var(--gray-text); line-height: 1.6;
+  transition: all .15s; border-radius: 6px;
+}
+.check-item:last-child { border-bottom: none; }
+.check-item:hover { background: var(--ans-bg); }
+.check-item.done { opacity: .45; text-decoration: line-through; }
+.check-item.done:hover { background: var(--ans-dark); }
+.check-box {
+  width: 22px; height: 22px;
+  border: 2px solid var(--gray-border); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px; font-size: 13px;
+  transition: all .15s;
+}
+.check-item.done .check-box { background: #66bb6a; border-color: #66bb6a; color: var(--white); }
+
+/* ── 키워드 그리드 ── */
+.kw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.kw-tile {
+  border: 1.5px solid var(--gray-border); border-radius: 10px;
+  padding: 14px; cursor: pointer; transition: all .15s; background: var(--white);
+}
+.kw-tile:hover { border-color: var(--ans-border); background: var(--ans-bg); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+.kw-tile.done  { background: var(--ans-bg); border-color: var(--ans-border); }
+.kw-icon  { font-size: 24px; margin-bottom: 6px; }
+.kw-name  { font-size: 16px; font-weight: 800; margin-bottom: 4px; color: var(--black); }
+.kw-tile.done .kw-name { color: #2e7d32; }
+.kw-cnt   { font-size: 13px; font-weight: 600; color: var(--gray-mid); }
+.kw-tile.done .kw-cnt { color: #4a7c59; font-weight: 700; }
+.kw-sub   { font-size: 12px; color: var(--gray-light); margin-top: 3px; }
+.kw-tile.done .kw-sub { color: #4a7c59; }
+
+/* ── 정보 박스 (사각박스) ──
+   기본: 그레이 바탕 (자주 나오는 문제 유형 스타일)
+   .green / .amber / .blue / .teal : 파스텔 컬러 */
+.info-box {
+  border: 1.5px solid var(--gray-border);
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin-bottom: 14px;
+  font-size: 15px; line-height: 2.1;
+  background: var(--gray-header);    /* ← 기본 그레이 바탕 */
+}
+.info-box.green { background: var(--ans-bg);   border-color: var(--ans-border); }
+.info-box.amber { background: var(--amber-bg); border-color: var(--amber-border); }
+.info-box.blue  { background: var(--blue-dark); border-color: var(--blue-border); }
+.info-box.teal  { background: var(--teal-bg);  border-color: var(--teal-border); }
+.info-box h3 {
+  font-size: 17px; font-weight: 900; margin-bottom: 12px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--gray-border);
+  color: var(--black);
+}
+.info-box.green h3 { border-bottom-color: var(--ans-border);   color: #2e7d32; }
+.info-box.amber h3 { border-bottom-color: var(--amber-border); color: #e65100; }
+.info-box.blue  h3 { border-bottom-color: var(--blue-border);  color: #283593; }
+.info-box.teal  h3 { border-bottom-color: var(--teal-border);  color: #00695c; }
+.info-box b { font-weight: 800; color: var(--black); }
+
+/* ── 마무리 배너 ── */
+.end-banner {
+  background: var(--ans-bg);
+  border: 2px solid var(--ans-border);
+  border-radius: 12px; padding: 28px 24px;
+  text-align: center; margin-top: 8px;
+}
+.end-banner .eb-title { font-size: 22px; font-weight: 900; margin-bottom: 8px; color: #2e7d32; }
+.end-banner .eb-sub   { font-size: 15px; color: #4a7c59; line-height: 1.8; font-weight: 600; }
+
+/* ── 반응형 ── */
+@media (max-width: 600px) {
+  .exam-pair { grid-template-columns: 1fr; }
+  .week-grid { grid-template-columns: 1fr; }
+  .header-title { font-size: 20px; }
+  .dday-val { font-size: 22px; }
+  body { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ 헤더 ══ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-title">🏗 건설안전기사 합격 플래너</div>
+    <div class="header-sub">오늘: 2026년 3월 9일 (월) · 지금 시작해도 충분히 합격할 수 있습니다!</div>
+    <div class="dday-row">
+      <div class="dday-box highlight">
+        <div class="dday-label">📝 필답형</div>
+        <div class="dday-val" id="dd1">D-40</div>
+        <div class="dday-date">4월 18일 (토)</div>
+      </div>
+      <div class="dday-box">
+        <div class="dday-label">🔧 작업형</div>
+        <div class="dday-val" id="dd2">D-47</div>
+        <div class="dday-date">4월 25일 (토)</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ 탭 바 ══ -->
+<nav class="tab-bar">
+  <div class="tab-inner">
+    <button class="tab-btn active" onclick="showTab('overview', this)">📊 전체 플랜</button>
+    <button class="tab-btn" onclick="showTab('weekly', this)">📅 주간 일정</button>
+    <button class="tab-btn" onclick="showTab('daily', this)">⏰ 일일 루틴</button>
+    <button class="tab-btn" onclick="showTab('keyword', this)">🔑 키워드 암기</button>
+    <button class="tab-btn" onclick="showTab('tip', this)">💡 합격 전략</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════ -->
+<!-- 탭1: 전체 플랜 -->
+<!-- ══════════════════════════════════ -->
+<div class="content-area active" id="tab-overview">
+
+  <div class="exam-pair">
+    <div class="exam-tile dark">
+      <div class="et-label">📝 필답형 시험</div>
+      <div class="et-date">2026년 4월 18일 (토)</div>
+      <div class="et-dday" id="dd1b">D-40</div>
+      <div class="et-sub">남은 날짜</div>
+    </div>
+    <div class="exam-tile">
+      <div class="et-label">🔧 작업형 시험</div>
+      <div class="et-date">2026년 4월 25일 (토)</div>
+      <div class="et-dday" id="dd2b">D-47</div>
+      <div class="et-sub">남은 날짜</div>
+    </div>
+  </div>
+
+  <!-- 로드맵 -->
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🗺</span>
+      <span class="card-head-title">5단계 합격 로드맵</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="phase-list">
+        <div class="phase-item">
+          <div class="phase-num">1</div>
+          <div class="phase-content">
+            <div class="phase-period">3/9 ~ 3/22 · 2주 · 기초 다지기</div>
+            <div class="phase-title">기출 1회독 + 핵심 키워드 정리</div>
+            <div class="phase-desc">
+              📌 <b>필답형 2024~2022년</b> 기출 전체 1회독 <b>(★★★ 위주)</b><br>
+              📌 <b>9대 핵심 키워드</b> 이론 정리 (하인리히·재해통계·안전관리자 등)<br>
+              📌 매일 <b>오답 ✗ 표시</b> 후 <b>오답노트 작성</b><br>
+              📌 <b>작업형 2024년</b> 기출 1회독
+            </div>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-num">2</div>
+          <div class="phase-content">
+            <div class="phase-period">3/23 ~ 4/5 · 2주 · 반복 암기</div>
+            <div class="phase-title">★★★ 완전 암기 + 오답노트 2회 반복</div>
+            <div class="phase-desc">
+              📌 <b>필답형 2021~2015년</b> 기출 1회독<br>
+              📌 <b>★★★ 빈출 248문제</b> 완전 암기 목표<br>
+              📌 <b>오답노트 2회 반복</b> — 틀린 것만 집중<br>
+              📌 <b>작업형 ★★★ 76문제</b> 집중 암기<br>
+              📌 <b>키워드별 빈출 공식·숫자</b> 외우기
+            </div>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-num">3</div>
+          <div class="phase-content">
+            <div class="phase-period">4/6 ~ 4/14 · 약점 집중</div>
+            <div class="phase-title">오답 제로 도전 + ★★ 추가 학습</div>
+            <div class="phase-desc">
+              📌 <b>오답노트 ✗ 전체</b> 매일 3회독<br>
+              📌 <b>★★ 빈출 302문제</b> 추가 학습<br>
+              📌 <b>숫자·수치 집중 암기</b> (교육시간·하중·각도 등)<br>
+              📌 <b>작업형 명칭·구조·기준</b> 문제 총정리
+            </div>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-num">4</div>
+          <div class="phase-content">
+            <div class="phase-period">4/15 ~ 4/17 · 3일 · 필답형 마무리</div>
+            <div class="phase-title">최종 점검 + 컨디션 관리</div>
+            <div class="phase-desc">
+              📌 <b>오답노트 전체</b> 마지막 1회독<br>
+              📌 <b>★★★ 빈출 전체</b> 빠른 리뷰<br>
+              📌 시험 전날은 <b>가벼운 복습 + 충분한 수면</b> 😴<br>
+              📌 4월 18일 📝 필답형 시험!
+            </div>
+          </div>
+        </div>
+        <div class="phase-item">
+          <div class="phase-num">5</div>
+          <div class="phase-content">
+            <div class="phase-period">4/18 ~ 4/24 · 7일 · 작업형 마무리</div>
+            <div class="phase-title">작업형 전체 기출 최종 점검</div>
+            <div class="phase-desc">
+              📌 작업형 전체 기출 최종 점검<br>
+              📌 명칭·수치·그림 문제 집중<br>
+              📌 4월 25일 🔧 작업형 시험! ✅
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">📈</span>
+      <span class="card-head-title">학습 목표 진행률</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="progress-item">
+        <div class="progress-top"><span>📝 필답형 ★★★ 빈출 (248문제)</span><span class="progress-pct" id="p1t">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="p1" style="width:0%"></div></div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-top"><span>📝 필답형 ★★ 빈출 (302문제)</span><span class="progress-pct" id="p2t">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="p2" style="width:0%"></div></div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-top"><span>🔧 작업형 ★★★ 빈출 (76문제)</span><span class="progress-pct" id="p3t">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="p3" style="width:0%"></div></div>
+      </div>
+      <div class="progress-item">
+        <div class="progress-top"><span>🔑 핵심 키워드 암기 (9개)</span><span class="progress-pct" id="p4t">0%</span></div>
+        <div class="progress-track"><div class="progress-fill" id="p4" style="width:0%"></div></div>
+      </div>
+      <div style="font-size:13px;color:var(--gray500);margin-top:10px;">* 키워드 탭에서 카드 체크 시 자동 업데이트</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 탭2: 주간 일정 -->
+<!-- ══════════════════════════════════ -->
+<div class="content-area" id="tab-weekly">
+  <div class="week-grid">
+
+    <div class="week-tile">
+      <div class="wt-head wc1"><span class="wt-head-title">1주차 · 3/9~3/15</span><span class="wt-badge">기초</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>필답형</b> 2025년·2024년 기출 1회독</div>
+        <div class="wt-row"><b>목표</b> 28문항 × 2년 = 56문제</div>
+        <div class="wt-row"><b>암기</b> <span class="tag tag-dark">하인리히</span><span class="tag tag-light">재해통계</span></div>
+        <div class="wt-row"><b>작업형</b> 2024년 ★★★ 1회독</div>
+        <div class="wt-row"><span class="tag tag-dark">⚠ X표시 즉시 오답노트</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc2"><span class="wt-head-title">2주차 · 3/16~3/22</span><span class="wt-badge">기초</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>필답형</b> 2023년·2022년 기출 1회독</div>
+        <div class="wt-row"><b>암기</b> <span class="tag tag-dark">안전관리자</span><span class="tag tag-light">법령</span></div>
+        <div class="wt-row"><b>빈출 ★★★</b> 전체 한 번 훑기</div>
+        <div class="wt-row"><b>작업형</b> ★★★ 집중암기</div>
+        <div class="wt-row"><span class="tag tag-light">✅ 1주차 오답노트 1회 복습</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc3"><span class="wt-head-title">3주차 · 3/23~3/29</span><span class="wt-badge">반복</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>필답형</b> 2021년·2020년 기출</div>
+        <div class="wt-row"><b>암기</b> <span class="tag tag-dark">건설기계</span><span class="tag tag-light">비계·거푸집</span></div>
+        <div class="wt-row"><b>★★★ 248문제</b> 반복 시작</div>
+        <div class="wt-row"><b>오답노트</b> 1~2주차 2회 반복</div>
+        <div class="wt-row"><span class="tag tag-dark">⚠ 숫자/수치 집중 암기</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc4"><span class="wt-head-title">4주차 · 3/30~4/5</span><span class="wt-badge">반복</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>필답형</b> 2019~2017년 기출</div>
+        <div class="wt-row"><b>암기</b> <span class="tag tag-dark">굴착·토공</span><span class="tag tag-light">추락·낙하</span></div>
+        <div class="wt-row"><b>★★★ 완전 암기</b> 목표 달성 주</div>
+        <div class="wt-row"><b>작업형</b> ★★ 88문제 시작</div>
+        <div class="wt-row"><span class="tag tag-light">✅ ★★★ 전체 자가 테스트</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc5"><span class="wt-head-title">5주차 · 4/6~4/12</span><span class="wt-badge">약점</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>필답형</b> 2016년·2015년 기출</div>
+        <div class="wt-row"><b>암기</b> <span class="tag tag-dark">안전표지</span></div>
+        <div class="wt-row"><b>오답노트 ✗</b> 전체 집중 반복</div>
+        <div class="wt-row"><b>★★ 302문제</b> 추가 학습</div>
+        <div class="wt-row"><span class="tag tag-dark">⚠ D-12: 오답 제로 목표</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc6"><span class="wt-head-title">6주차 · 4/13~4/18</span><span class="wt-badge">마무리</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>4/13~15</b> 오답노트 최종 점검</div>
+        <div class="wt-row"><b>4/16~17</b> ★★★ 빠른 리뷰</div>
+        <div class="wt-row"><b>4/17 저녁</b> 가벼운 복습 + 꿀잠 😴</div>
+        <div class="wt-row" style="color:var(--black);font-weight:800;font-size:16px;">📝 4/18 필답형 시험!</div>
+        <div class="wt-row"><span class="tag tag-light">✅ 수험표·신분증 확인</span></div>
+      </div>
+    </div>
+
+    <div class="week-tile">
+      <div class="wt-head wc7"><span class="wt-head-title">+1주 · 4/18~4/24</span><span class="wt-badge">작업형</span></div>
+      <div class="wt-body">
+        <div class="wt-row"><b>작업형</b> 전체 기출 최종 점검</div>
+        <div class="wt-row">명칭·구조·수치 집중</div>
+        <div class="wt-row"><b>4/24 저녁</b> 핵심 포인트 마무리</div>
+        <div class="wt-row" style="color:var(--black);font-weight:800;font-size:16px;">🔧 4/25 작업형 시험!</div>
+        <div class="wt-row"><span class="tag tag-light">🏆 합격 완료!</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 탭3: 일일 루틴 -->
+<!-- ══════════════════════════════════ -->
+<div class="content-area" id="tab-daily">
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🌅</span>
+      <span class="card-head-title">평일 일일 학습 루틴 (3~4시간)</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <table class="timetable">
+        <tr><th>시간</th><th>학습 내용</th><th>방법</th></tr>
+        <tr>
+          <td><span class="time-chip">출퇴근 1h</span></td>
+          <td><b>오답노트 보기</b><br>전날 ✗ 카드 빠르게 리뷰</td>
+          <td>공부앱 오답노트 탭</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">저녁 1부</span><br>7:00~8:00</td>
+          <td><b>신규 기출 학습</b><br>해당 연도/회차 20~30문제</td>
+          <td>공부앱 기출문제 탭<br>○△✗ 표시하며 진행</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">저녁 2부</span><br>8:00~8:40</td>
+          <td><b>오답노트 작성</b><br>✗ 문제 정답 이유 메모</td>
+          <td>공부앱 오답노트 작성<br>핵심 키워드 메모</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">저녁 3부</span><br>8:40~9:30</td>
+          <td><b>키워드 암기</b><br>해당 주 키워드 이론</td>
+          <td>교재 + 공부앱 키워드 탭</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">취침 전 30분</span></td>
+          <td><b>빈출 ★★★ 빠른 리뷰</b></td>
+          <td>침대에서 눈으로 훑기</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🌞</span>
+      <span class="card-head-title">주말 집중 학습 루틴 (6~8시간)</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <table class="timetable">
+        <tr><th>시간</th><th>학습 내용</th><th>목표</th></tr>
+        <tr>
+          <td><span class="time-chip">오전</span><br>9:00~11:30</td>
+          <td><b>기출문제 집중</b><br>연도별 1~2회차 전체 풀기</td>
+          <td>28문제 × 2회 = 56문제</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">점심 후</span><br>1:00~2:30</td>
+          <td><b>오답노트 총복습</b><br>이번 주 ✗ 전체 다시 보기</td>
+          <td>오답률 50% 이하 목표</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">오후 1부</span><br>2:30~4:00</td>
+          <td><b>★★★ 빈출 집중</b><br>해당 주 키워드 전체</td>
+          <td>키워드 1~2개 완전 암기</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">오후 2부</span><br>4:00~5:30</td>
+          <td><b>작업형 기출</b><br>명칭·수치 집중</td>
+          <td>작업형 ★★★ 진도</td>
+        </tr>
+        <tr>
+          <td><span class="time-chip">저녁</span><br>7:00~8:30</td>
+          <td><b>주간 총정리</b><br>이번 주 내용 마인드맵</td>
+          <td>암기 완료 체크리스트</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">📋</span>
+      <span class="card-head-title">오늘의 체크리스트</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <ul class="check-list">
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>공부앱 열어서 오늘 기출 확인</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>2025년 기출 전체 1회독 (28문제)</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>틀린 문제 ✗ 표시 + 오답노트 작성</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>★★★ 빈출 탭 5분 훑기</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>하인리히 법칙 핵심 숫자 암기</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>작업형 2024년 1회차 1~5번 학습</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>취침 전 오답노트 한 번 더 확인</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🚨</span>
+      <span class="card-head-title">시험 당일 체크리스트</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <ul class="check-list">
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>수험표 출력 또는 모바일 수험표 준비</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>신분증 (주민등록증/운전면허증) 확인</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>검정색 볼펜 2개 이상 준비</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>시험장 위치·교통 미리 확인</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>시험 30분 전 도착 목표</b></li>
+        <li class="check-item" onclick="toggleCheck(this)"><span class="check-box"></span><b>시험 전날 11시 전 취침</b></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 탭4: 키워드 암기 -->
+<!-- ══════════════════════════════════ -->
+<div class="content-area" id="tab-keyword">
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🔑</span>
+      <span class="card-head-title">9대 핵심 키워드 암기 현황</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="kw-grid" id="kwGrid">
+        <div class="kw-tile" onclick="toggleKw(this,'kw1')">
+          <div class="kw-icon">🔴</div>
+          <div class="kw-name">하인리히</div>
+          <div class="kw-cnt">★★★ 12문제</div>
+          <div class="kw-sub">1:29:300 / 도미노 이론</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw2')">
+          <div class="kw-icon">📊</div>
+          <div class="kw-name">재해통계</div>
+          <div class="kw-cnt">★★★ 11문제</div>
+          <div class="kw-sub">도수율·강도율·연천인율</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw3')">
+          <div class="kw-icon">👷</div>
+          <div class="kw-name">안전관리자</div>
+          <div class="kw-cnt">★★★ 8문제</div>
+          <div class="kw-sub">선임기준·직무·자격</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw4')">
+          <div class="kw-icon">🏗</div>
+          <div class="kw-name">건설기계</div>
+          <div class="kw-cnt">★★★ 15문제</div>
+          <div class="kw-sub">크레인·굴착기·정격하중</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw5')">
+          <div class="kw-icon">🏠</div>
+          <div class="kw-name">비계·거푸집</div>
+          <div class="kw-cnt">★★★ 18문제</div>
+          <div class="kw-sub">설치기준·축압요인</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw6')">
+          <div class="kw-icon">⛏</div>
+          <div class="kw-name">굴착·토공</div>
+          <div class="kw-cnt">★★★ 14문제</div>
+          <div class="kw-sub">흙막이·히빙·보일링</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw7')">
+          <div class="kw-icon">🚧</div>
+          <div class="kw-name">안전표지</div>
+          <div class="kw-cnt">★★★ 9문제</div>
+          <div class="kw-sub">경고·금지·지시·안내</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw8')">
+          <div class="kw-icon">⬇</div>
+          <div class="kw-name">추락·낙하</div>
+          <div class="kw-cnt">★★★ 16문제</div>
+          <div class="kw-sub">안전난간·개구부·발판</div>
+        </div>
+        <div class="kw-tile" onclick="toggleKw(this,'kw9')">
+          <div class="kw-icon">📋</div>
+          <div class="kw-name">법령</div>
+          <div class="kw-cnt">★★★ 10문제</div>
+          <div class="kw-sub">산업안전보건법 조항</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--gray500);margin-top:12px;">카드 클릭 → 암기 완료 (검정색) 표시. 저장됩니다.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">📌</span>
+      <span class="card-head-title">절대 암기 숫자·수치 TOP 20</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="info-box amber">
+        <h3>🔢 반드시 외워야 할 숫자들</h3>
+        <div style="display:grid;gap:8px;font-weight:600;">
+          <div>① 하인리히 <b>1 : 29 : 300</b> (중상 : 경상 : 무상해)</div>
+          <div>② 안전보건교육 — 신규 채용 <b>8시간</b>, 관리감독자 <b>16시간/년</b></div>
+          <div>③ 안전난간 높이 <b>90~120cm</b>, 중간 난간대 <b>45~60cm</b></div>
+          <div>④ 발끝막이판 높이 <b>10cm 이상</b></div>
+          <div>⑤ 굴착면 기울기 — 암반 <b>1:0.5</b>, 모래 <b>1:1.5</b></div>
+          <div>⑥ 비계 작업발판 폭 <b>40cm 이상</b>, 틈새 <b>3cm 이하</b></div>
+          <div>⑦ 도수율 = 재해건수 / 연근로시간 × <b>1,000,000</b></div>
+          <div>⑧ 강도율 = 근로손실일수 / 연근로시간 × <b>1,000</b></div>
+          <div>⑨ 연천인율 = 재해건수 / 평균근로자수 × <b>1,000</b></div>
+          <div>⑩ 사고사망만인율 = 사망자수 / 근로자수 × <b>10,000</b></div>
+          <div>⑪ 안전관리자 선임 — <b>50인 이상</b> 건설업</div>
+          <div>⑫ 유해위험방지계획서 — <b>120억 이상</b> 건설공사</div>
+          <div>⑬ 작업발판 최대 적재하중 <b>250kg/㎡</b></div>
+          <div>⑭ 달비계 최대 하중 <b>250kg</b></div>
+          <div>⑮ 거푸집 동바리 수직하중 <b>5kN/㎡ 이상</b></div>
+          <div>⑯ 크레인 정격하중 초과 <b>금지</b></div>
+          <div>⑰ 위험성 평가 — 연 <b>1회 이상</b> 정기평가</div>
+          <div>⑱ 중대재해 보고 시한 <b>1일 이내</b></div>
+          <div>⑲ 안전보건관리책임자 선임 — <b>50인 이상</b> 사업장</div>
+          <div>⑳ 안전관리비 계상 기준 — 공사금액 <b>4천만원 이상</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🔧</span>
+      <span class="card-head-title">작업형 핵심 암기 포인트</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="info-box">
+        <h3>자주 나오는 문제 유형</h3>
+        <div style="display:grid;gap:8px;font-size:15px;line-height:1.9;">
+          <div><b>① 명칭 쓰기</b> — 그림 보고 부위명 기입</div>
+          <div><b>② 설치기준 쓰기</b> — 수치 포함 서술 필수</div>
+          <div><b>③ 종류 나열</b> — 3~5가지 열거</div>
+          <div><b>④ 조치사항</b> — 법령 기반 서술</div>
+          <div><b>⑤ 계산 문제</b> — 강도율·도수율·만인율</div>
+        </div>
+      </div>
+      <div class="info-box green">
+        <h3>✏️ 서술 답안 작성 요령</h3>
+        <div style="font-size:15px;line-height:2;">
+          · 항목 번호 <b>①②③ 명확히 구분</b><br>
+          · <b>단위 반드시 기재</b> (cm, kN, %, 인 등)<br>
+          · <b>법령 근거 문구 그대로</b> 쓰면 가점<br>
+          · <b>많이 쓸수록 유리</b> (부분점수 있음)
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════ -->
+<!-- 탭5: 합격 전략 -->
+<!-- ══════════════════════════════════ -->
+<div class="content-area" id="tab-tip">
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">📝</span>
+      <span class="card-head-title">필답형 합격 전략</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="info-box green">
+        <h3>✅ 합격선: 60점 이상 (100점 만점)</h3>
+        <div style="font-size:15px;line-height:2;">
+          <b>1. ★★★ 빈출 248문제 = 핵심</b><br>
+          &nbsp;&nbsp;<b>이것만 완전 암기해도 합격 가능</b><br>
+          &nbsp;&nbsp;공부앱 빈출 탭 → <b>★★★ 버튼 반복 학습</b><br><br>
+          <b>2. 오답노트 활용법</b><br>
+          &nbsp;&nbsp;<b>X 표시 후 오답노트 즉시 작성</b><br>
+          &nbsp;&nbsp;<b>왜 틀렸는지 이유 한 줄 기록</b><br>
+          &nbsp;&nbsp;<b>매일 전날 오답노트 먼저 확인</b><br><br>
+          <b>3. 출제 패턴 파악</b><br>
+          &nbsp;&nbsp;<b>최근 3년(2022~2024)</b> 출제 비율 높음<br>
+          &nbsp;&nbsp;같은 키워드 반복 출제 → 키워드 탭 적극 활용<br>
+          &nbsp;&nbsp;법령 숫자(인원수·금액·시간) 집중 암기
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">🔧</span>
+      <span class="card-head-title">작업형 합격 전략</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div class="info-box teal">
+        <h3>✅ 합격선: 60점 이상 (100점 만점)</h3>
+        <div style="font-size:15px;line-height:2;">
+          <b>1. 명칭 암기 최우선</b><br>
+          &nbsp;&nbsp;<b>그림 → 부위명 즉시 연결</b><br>
+          &nbsp;&nbsp;자주 나오는 기계·구조물 도식화<br><br>
+          <b>2. 설치기준은 수치와 함께</b><br>
+          &nbsp;&nbsp;<b>"설치한다" (✗) → "○○cm 이상 설치한다" (✅)</b><br>
+          &nbsp;&nbsp;<b>수치 없으면 감점</b><br><br>
+          <b>3. 서술 답안 전략</b><br>
+          &nbsp;&nbsp;<b>많이 쓸수록 유리</b> (부분점수 있음)<br>
+          &nbsp;&nbsp;<b>핵심 키워드 포함 필수</b><br>
+          &nbsp;&nbsp;<b>번호 매기기 필수 (①②③)</b>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head open" onclick="toggleCard(this)">
+      <span class="card-head-icon">⚡</span>
+      <span class="card-head-title">40일 합격의 6가지 핵심 원칙</span>
+      <span class="card-head-arrow">▼</span>
+    </div>
+    <div class="card-body open">
+      <div style="display:grid;gap:10px;">
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 1.</span>&nbsp;
+          <span style="font-size:16px;"><b>매일 빠짐없이</b> — 하루 3시간 > 주말 몰아치기</span>
+        </div>
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 2.</span>&nbsp;
+          <span style="font-size:16px;"><b>오답노트 = 가장 중요한 자산</b>, 절대 건너뛰지 말 것</span>
+        </div>
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 3.</span>&nbsp;
+          <span style="font-size:16px;"><b>★★★ 먼저</b>, 그 다음 ★★, 마지막에 ★</span>
+        </div>
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 4.</span>&nbsp;
+          <span style="font-size:16px;"><b>이해 후 암기</b> — 왜 그런지 이해하면 오래 기억</span>
+        </div>
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 5.</span>&nbsp;
+          <span style="font-size:16px;"><b>시험 3일 전부터 새 내용 금지</b> — 복습만</span>
+        </div>
+        <div class="info-box amber" style="padding:16px 20px;">
+          <span style="font-size:18px;font-weight:900;">원칙 6.</span>&nbsp;
+          <span style="font-size:16px;"><b>수면 최소 7시간</b> — 잠이 최고의 암기 강화제</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="end-banner">
+    <div class="eb-title">💪 경덕아, 할 수 있다!</div>
+    <div class="eb-sub">
+      40일은 충분합니다.<br>
+      기출문제 반복 + 오답노트 = 합격 공식.<br>
+      지금 만든 공부앱을 믿고 매일 꾸준히만 하면<br>
+      4월 18일에 웃을 수 있습니다! 🏆
+    </div>
+  </div>
+
+</div>
+
+<script>
+// D-day
+(function(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d1 = new Date('2026-04-18');
+  const d2 = new Date('2026-04-25');
+  const fmt = d => { const v=Math.ceil((d-today)/86400000); return v>0?'D-'+v:v===0?'D-Day':'D+'+ (-v); };
+  ['dd1','dd1b'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=fmt(d1); });
+  ['dd2','dd2b'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=fmt(d2); });
+})();
+
+// 탭
+function showTab(id, btn) {
+  document.querySelectorAll('.content-area').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// 카드 토글
+function toggleCard(head) {
+  head.classList.toggle('open');
+  head.nextElementSibling.classList.toggle('open');
+}
+
+// 체크리스트
+function toggleCheck(li) {
+  li.classList.toggle('done');
+  const box = li.querySelector('.check-box');
+  box.textContent = li.classList.contains('done') ? '✓' : '';
+}
+
+// 키워드 체크
+const kwDone = new Set(JSON.parse(localStorage.getItem('plannerKwDone')||'[]'));
+function toggleKw(card, id) {
+  kwDone.has(id) ? kwDone.delete(id) : kwDone.add(id);
+  card.classList.toggle('done', kwDone.has(id));
+  localStorage.setItem('plannerKwDone', JSON.stringify([...kwDone]));
+  updateProgress();
+}
+document.querySelectorAll('#kwGrid .kw-tile').forEach((card,i)=>{
+  if(kwDone.has('kw'+(i+1))) card.classList.add('done');
+});
+
+function updateProgress() {
+  const pct = Math.round(kwDone.size/9*100);
+  document.getElementById('p4').style.width = pct+'%';
+  document.getElementById('p4t').textContent = pct+'%';
+}
+updateProgress();
+</script>
+</body>
+</html>
